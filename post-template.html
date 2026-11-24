@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Post Template</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/site.css">
+<script src="../assets/site.js"></script>
+<script src="../assets/scene.js"></script>
+<!-- Equations: write TeX between $...$ (inline) or $$...$$ (display). MathJax turns it into crisp SVG. -->
+<script>
+window.MathJax = { tex: { inlineMath: [["$","$"],["\\(","\\)"]] }, svg: { fontCache: "global" } };
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-svg.min.js" defer></script>
+<style>
+pre{font-family:var(--f-mono);font-size:13px;background:var(--soft);border:1px solid var(--line);border-radius:4px;padding:12px 14px;overflow-x:auto;line-height:1.5}
+ol.steps{padding-left:22px;margin:0}
+ol.steps li{margin-bottom:8px}
+</style>
+</head>
+<body>
+<header class="site-head"><div class="in">
+  <a class="brand" href="../index.html"><span class="dot" aria-hidden="true"></span>Amy Hwang</a>
+  <nav class="site-nav" aria-label="Main"><a href="../index.html#work">Work</a><a href="../index.html#about">About</a></nav>
+  <button class="theme-btn" type="button">Dark mode</button>
+</div></header>
+
+<main class="wrap">
+  <header class="col post-head">
+    <div class="meta"><span>Month 2026</span><span class="tag">Topic</span><span class="tag">Topic</span></div>
+    <h1>Post Template</h1>
+    <p class="lede">Copy this file to start a new project write-up. It shows the three building blocks: equations, a stepped animation, and a figure with a caption.</p>
+  </header>
+
+  <section>
+    <div class="col">
+      <div class="num">01</div>
+      <h2>Writing equations</h2>
+      <p>Inline math sits in a sentence: the bolt load is $F_b = F_i + C\,P$ while the joint stays clamped. Display math gets its own line:</p>
+    </div>
+    <div class="eq math">$$C = \frac{k_b}{k_b + k_p}, \qquad F_c = F_i - (1-C)\,P$$</div>
+    <div class="col">
+      <p>In the file, that equation is written as plain TeX:</p>
+      <pre>&lt;div class="eq math"&gt;$$C = \frac{k_b}{k_b + k_p}, \qquad F_c = F_i - (1-C)\,P$$&lt;/div&gt;</pre>
+    </div>
+  </section>
+
+  <section>
+    <div class="col">
+      <div class="num">02</div>
+      <h2>A stepped animation</h2>
+      <p>Each step builds on the last, the way a 3Blue1Brown video adds one idea at a time. Press Next to play the next step, or Replay all. This demo shows a point going around a circle tracing out a sine wave.</p>
+    </div>
+    <div id="demoScene"></div>
+    <div class="col">
+      <p>The scene is a list of steps, each with a label, a duration and a draw function:</p>
+<pre>Scene.create(document.getElementById("demoScene"), {
+  viewBox: "0 0 720 320",
+  steps: [
+    { label: "Draw the axes", dur: 900,
+      draw: (g, t, S) =&gt; S.line(g, 40, 160, 680, 160, { write: t, muted: true }) },
+    { label: "Draw the circle", dur: 1200,
+      draw: (g, t, S) =&gt; S.circle(g, 150, 160, 100, { write: t }) },
+    // ...one entry per idea
+  ]
+});</pre>
+    </div>
+  </section>
+
+  <section>
+    <div class="col">
+      <div class="num">03</div>
+      <h2>How to add a new project</h2>
+      <ol class="steps">
+        <li>Copy this file into <span class="mono">projects/</span> and rename it, e.g. <span class="mono">swirl-injector.html</span>.</li>
+        <li>Change the title, date and tags at the top.</li>
+        <li>Write sections with <span class="mono">&lt;section&gt;</span>, equations in TeX, and scenes with <span class="mono">Scene.create</span>.</li>
+        <li>Add a card for it on <span class="mono">index.html</span>: copy the existing <span class="mono">&lt;a class="item"&gt;</span> block and change the link and text.</li>
+      </ol>
+    </div>
+    <div class="callout">
+      <h3>Accent color</h3>
+      <p style="margin:0">The whole site uses one accent color. To change it, edit <span class="mono">--accent</span> and <span class="mono">--accent-text</span> in <span class="mono">assets/site.css</span> (there is one value for light mode and one for dark mode).</p>
+    </div>
+  </section>
+</main>
+
+<footer class="site-foot"><div class="in"><span>© <span id="year">2026</span> Amy Hwang</span><a href="../index.html">← All write-ups</a></div></footer>
+
+<script>
+(function(){
+  var cx=150, cy=160, r=100, x0=300, x1=680, theta=Math.PI*0.3;
+  function sinePath(upto){ // trace from 0 to upto (radians)
+    var d="", N=120;
+    for(var i=0;i<=N;i++){var a=upto*i/N, x=x0+(x1-x0)*a/(2*Math.PI), y=cy-r*Math.sin(a); d+=(i?" L":"M")+x.toFixed(1)+","+y.toFixed(1);}
+    return d;
+  }
+  Scene.create(document.getElementById("demoScene"),{
+    viewBox:"0 0 720 320", label:"Point on a circle tracing a sine wave",
+    steps:[
+      {label:"Draw the axes", dur:900, draw:function(g,t,S){
+        S.line(g,30,cy,x1+20,cy,{write:t,muted:true,width:1.5});
+        S.line(g,cx,cy-r-30,cx,cy+r+30,{write:t,muted:true,width:1.5});
+        S.line(g,x0,cy-r-30,x0,cy+r+30,{write:t,muted:true,width:1.5});
+      }},
+      {label:"Draw a circle of radius r", dur:1200, draw:function(g,t,S){
+        S.circle(g,cx,cy,r,{write:t});
+        S.text(g,cx+r+8,cy-8,"r",{italic:true,fade:t,size:18});
+      }},
+      {label:"Put a point at angle θ", dur:1000, draw:function(g,t,S){
+        var a=theta*S.ease(t), px=cx+r*Math.cos(a), py=cy-r*Math.sin(a);
+        S.line(g,cx,cy,px,py,{accent:true,width:2.5});
+        S.dot(g,px,py,{accent:true,r:6});
+        S.text(g,cx+28,cy-10,"θ",{italic:true,fade:t,size:18});
+      }},
+      {label:"Its height is r sin θ", dur:900, draw:function(g,t,S){
+        var px=cx+r*Math.cos(theta), py=cy-r*Math.sin(theta);
+        S.line(g,px,cy,px,py,{write:t,dash:"5 5",width:2});
+        S.text(g,px+8,(cy+py)/2+5,"r sin θ",{italic:true,fade:t,size:17});
+        S.line(g,px,py,x0,py,{write:t,muted:true,dash:"2 5",width:1.5});
+      }},
+      {label:"Sweep θ around: the height traces a sine wave", dur:2600, draw:function(g,t,S){
+        var a=2*Math.PI*t;
+        S.path(g,sinePath(Math.max(a,0.0001)),{accent:true,width:2.5});
+        var px=cx+r*Math.cos(a), py=cy-r*Math.sin(a), wx=x0+(x1-x0)*t;
+        if(t<1){S.dot(g,px,py,{r:5});S.line(g,px,py,wx,py,{muted:true,dash:"2 5",width:1.2});S.dot(g,wx,py,{accent:true,r:5});}
+        S.text(g,x1-4,cy+r+26,"2π",{italic:true,anchor:"end",fade:t,size:16});
+      }}
+    ]
+  });
+})();
+</script>
+</body>
+</html>

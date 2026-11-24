@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bolted Joints: Tension and Shear</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/site.css">
+<script src="../assets/site.js"></script>
+<style>
+svg text{font-family:var(--f-body)}
+svg .hand{font-family:var(--f-display);font-style:italic}
+.sources-mini{font-size:14px;color:var(--muted)}
+</style>
+</head>
+<body>
+<header class="site-head"><div class="in">
+  <a class="brand" href="../index.html"><span class="dot" aria-hidden="true"></span>Amy Hwang</a>
+  <nav class="site-nav" aria-label="Main"><a href="../index.html#work" aria-current="page">Work</a><a href="../index.html#about">About</a></nav>
+  <button class="theme-btn" type="button">Dark mode</button>
+</div></header>
+<div class="wrap">
+
+<header class="col post-head">
+  <div class="meta"><span>Nov 2026</span><span class="tag">Structures</span><span class="tag">Hand calcs</span><span class="tag">Interactive</span></div>
+  <h1>Bolted Joints: Tension and Shear</h1>
+  <p class="lede">How preload, joint stiffness and the applied load decide what a bolt actually carries. Worked through on my subscale TCA joint (converging nozzle bolted to the chamber with 12 tapped ¼-28 bolts).</p>
+  <p class="sources-mini">Built from my handwritten notes (Bolt_Joint.pdf), my calculation sheet (rough_calc_2.xlsx, which follows the MechaniCalc bolted joint reference), and the Vespula injector PDR, slides 24–27, as a second example.</p>
+  <nav class="toc" aria-label="Sections">
+    <a href="#preload">1 · Preload</a>
+    <a href="#tension">2 · Tension joint</a>
+    <a href="#stiffness">3 · Joint stiffness</a>
+    <a href="#load">4 · Load per bolt</a>
+    <a href="#shear">5 · Shear joint</a>
+    <a href="#stress">6 · Bolt stress</a>
+    <a href="#threads">7 · Thread shear</a>
+    <a href="#calc">Full calculation</a>
+  </nav>
+</header>
+
+<!-- 1 PRELOAD -->
+<section id="preload">
+  <div class="col">
+    <div class="num">01</div>
+    <h2>Preload: why tightening a nut makes a clamp</h2>
+    <p>Look at it from the bolt's point of view. The head is held by the upper plate, so when the <span class="n">nut</span> is rotated it pulls the <span class="b">bolt</span> down. The bolt stretches, and like a rubber band it wants to go back to its original length. So the head pulls the upper plate down and the nut pushes the lower plate up. The <span class="g">plates</span> are squeezed together, and that squeeze is the <span class="y">clamping force</span>.</p>
+    <p>Preload is the tensile force this puts in the fastener. The same thing happens with a bolt in a tapped (threaded) hole: the threads in the hole play the role of the nut.</p>
+  </div>
+  <div class="fig">
+    <svg id="plSvg" viewBox="0 0 680 300" role="img" aria-label="Animation: nut tightened, bolt stretches, plates compress; spring model on the right"></svg>
+    <div class="controls">
+      <button class="btn" id="plPlay" type="button">Play tightening</button>
+      <label for="plScrub" class="cap">Step through</label>
+      <input id="plScrub" type="range" min="0" max="1000" value="1000">
+    </div>
+    <p class="cap" id="plStep" aria-live="polite"></p>
+  </div>
+  <div class="col">
+    <p>The plates are stiffer than the bolt, so for the same force F<sub>i</sub> the bolt stretches a lot and the plates compress only slightly. In the spring model on the right, the two deflections are drawn in the ratio of my joint's stiffnesses: δ<sub>p</sub>/δ<sub>b</sub> = k<sub>b</sub>/k<sub>grip</sub> ≈ 0.18.</p>
+  </div>
+</section>
+
+<!-- 2 TENSION -->
+<section id="tension">
+  <div class="col">
+    <div class="num">02</div>
+    <h2>Tension joint: who carries the applied load?</h2>
+    <p>In a tension joint the applied load P pulls along the bolt axis. Without preload, P just pulls the plates apart. With preload, the bolt and the clamped plates act like two springs, and P is shared between them:</p>
+    <p class="cap">F<sub>b</sub> = bolt load, F<sub>c</sub> = clamping force, F<sub>i</sub> = preload, k<sub>b</sub> = bolt stiffness, k<sub>p</sub> = plate stiffness, Δ = extra stretch</p>
+  </div>
+  <div class="eqs">
+    <div class="eq">P = 0: &nbsp; F<sub>b</sub> = F<sub>c</sub> = F<sub>i</sub></div>
+    <div class="eq">P &gt; 0, F<sub>c</sub> &gt; 0: &nbsp; F<sub>b</sub> = P + F<sub>c</sub>, &nbsp; F<sub>b</sub> = F<sub>i</sub> + k<sub>b</sub>Δ, &nbsp; F<sub>c</sub> = F<sub>i</sub> − k<sub>p</sub>Δ &nbsp;⇒&nbsp; Δ = P/(k<sub>b</sub>+k<sub>p</sub>)</div>
+    <div class="eq">C = k<sub>b</sub>/(k<sub>b</sub>+k<sub>p</sub>): &nbsp; F<sub>b</sub> = F<sub>i</sub> + C·P, &nbsp; F<sub>c</sub> = F<sub>i</sub> − (1−C)·P<span class="lbl">C = joint stiffness factor</span></div>
+    <div class="eq">F<sub>c</sub> = 0 at P<sub>sep</sub> = F<sub>i</sub>/(1−C); &nbsp; after that F<sub>c</sub> = 0, F<sub>b</sub> = P<span class="lbl">the bolt carries everything</span></div>
+  </div>
+  <div class="fig">
+    <div class="controls" role="group" aria-label="Choose example joint">
+      <button type="button" class="btn preset" data-preset="tca" aria-pressed="true">My TCA joint (rough_calc_2)</button>
+      <button type="button" class="btn preset" data-preset="pdr" aria-pressed="false">Vespula PDR, hard start (slide 27)</button>
+    </div>
+    <div class="two">
+      <svg id="tjChart" viewBox="0 0 560 330" role="img" aria-label="Bolt load and clamping force versus applied load"></svg>
+      <div style="display:grid;gap:12px">
+        <svg id="tjJoint" viewBox="0 0 300 200" role="img" aria-label="Joint showing clamp or separation"></svg>
+        <div><span id="tjState" class="chip ok">Clamped</span></div>
+      </div>
+    </div>
+    <div class="controls">
+      <label for="tjP" class="cap">Applied load P per bolt</label>
+      <input id="tjP" type="range" min="0" max="1000" value="0">
+      <button type="button" class="btn" id="tjDesign">Go to design load</button>
+    </div>
+    <div class="readouts">
+      <div class="ro"><div class="k">Applied P</div><div class="v" id="roP"></div></div>
+      <div class="ro"><div class="k">Bolt load F<sub>b</sub></div><div class="v b" id="roFb"></div></div>
+      <div class="ro"><div class="k">Clamp F<sub>c</sub></div><div class="v g" id="roFc"></div></div>
+      <div class="ro"><div class="k">P<sub>sep</sub> = F<sub>i</sub>/(1−C)</div><div class="v" id="roSep"></div></div>
+    </div>
+    <p class="cap" id="tjNote"></p>
+  </div>
+  <div class="col">
+    <p>The slope of the blue line is C. In my joint C ≈ 0.15, so the bolt picks up only about 15% of P and the clamp loses the other 85%. This is the point from the video (3:00–3:29) in my notes: the plate spring gets most of the load. As P grows, the plates head toward separation and the clamp drops.</p>
+    <p>The factor of safety against separation is FS<sub>sep</sub> = F<sub>sep</sub>/F<sub>t,app</sub>. In the PDR example the same method gives FS ≈ 1.29 at hard start. My joint has far more margin (about 13.5) because the design load is small compared with the preload.</p>
+  </div>
+</section>
+
+<!-- 3 STIFFNESS -->
+<section id="stiffness">
+  <div class="col">
+    <div class="num">03</div>
+    <h2>Joint stiffness: where C comes from</h2>
+    <p>The bolt is two springs in series: the unthreaded shank and the threaded part that sits inside the grip. Shank: A = πd²/4 over L<sub>shank</sub> = L − L<sub>thd</sub>. Threads: A<sub>t</sub> over L<sub>thd,g</sub> = L<sub>g</sub> − L<sub>shank</sub>.</p>
+  </div>
+  <div class="eqs">
+    <div class="eq">k<sub>b</sub> = 1 / (1/k<sub>shank</sub> + 1/k<sub>thd</sub>), &nbsp; k<sub>shank</sub> = (πd²/4)·E<sub>b</sub>/L<sub>shank</sub>, &nbsp; k<sub>thd</sub> = A<sub>t</sub>·E<sub>b</sub>/L<sub>thd,g</sub></div>
+    <div class="eq">k<sub>grip</sub> = π·E·d·tanα / 2 ln[ 5 (L<sub>g</sub>tanα + 0.5d) / (L<sub>g</sub>tanα + 2.5d) ], &nbsp; α = 30°<span class="lbl">every part in the grip has the same E</span></div>
+    <div class="eq">C = k<sub>bolt</sub> / (k<sub>bolt</sub> + k<sub>grip</sub>)</div>
+  </div>
+  <div class="two">
+    <div class="fig">
+      <svg id="tapSvg" viewBox="0 0 440 240" role="img" aria-label="Tapped joint geometry: converging nozzle clamped to chamber"></svg>
+      <p class="cap">My tapped joint (redrawn from notes p.5). In a tapped joint the grip L<sub>g</sub> is not the full bolt length: it is the head-to-plate length plus part of the engagement. My sheet uses L<sub>g</sub> = 1.125 in.</p>
+    </div>
+    <div class="fig">
+      <div class="tablewrap"><table id="stiffTbl"></table></div>
+      <p class="cap">The plates are about 5.6× stiffer than the bolt, which is why C is small.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 4 LOAD PER BOLT -->
+<section id="load">
+  <div class="col">
+    <div class="num">04</div>
+    <h2>Applied load on each bolt</h2>
+    <p>Two loads act on my nozzle joint (notes p.6). <strong>Chamber pressure</strong> pushes on the sealed area and tries to pull the nozzle off, which loads the bolts in tension. The <strong>weight</strong> of the converging and graphite nozzle hangs off the joint, which gives a bending moment M = W·L<sub>com</sub> and a small shear.</p>
+  </div>
+  <div class="eqs">
+    <div class="eq">F<sub>P</sub> = A<sub>P</sub>·p<sub>c</sub>, &nbsp; A<sub>P</sub> = π d<sub>seal</sub>² / 4, &nbsp; p<sub>c,max</sub> = 260 psi</div>
+    <div class="eq">Moment on a bolt circle: F = M·y / Σy², &nbsp; Σy² = 6R² for 12 bolts &nbsp;⇒&nbsp; top bolt gets M/(6R)</div>
+    <div class="eq">F<sub>t,app</sub> = F<sub>P</sub>/12 + M/(6R), &nbsp; F<sub>s,app</sub> = W/12</div>
+  </div>
+  <div class="two">
+    <div class="fig">
+      <svg id="circSvg" viewBox="0 0 360 330" role="img" aria-label="12-bolt circle colored by tensile load"></svg>
+      <p class="cap">Hover or focus a bolt to see its load. Bolts above the center line get extra tension from M, and bolts below get less.</p>
+      <p class="cap" id="circRead" aria-live="polite"></p>
+    </div>
+    <div class="fig">
+      <div class="tablewrap"><table id="loadTbl"></table></div>
+      <p class="cap">Pressure dominates. The moment adds less than 2 lbf to the worst bolt, and the weight shear is about 1 lbf per bolt.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 5 SHEAR -->
+<section id="shear">
+  <div class="col">
+    <div class="num">05</div>
+    <h2>Shear joint: friction first, then the bolt</h2>
+    <p>In a shear joint the load P is perpendicular to the bolt axis. Preload matters here too, because the clamp creates friction between the plates.</p>
+    <p class="cap">F<sub>i</sub> = preload, P = total load / number of bolts, μ = friction coefficient between plates, n<sub>s</sub> = number of slip planes</p>
+  </div>
+  <div class="eqs">
+    <div class="eq">Slip-resistant: &nbsp; F<sub>f</sub> = μ·F<sub>i</sub>·n<sub>s</sub>, &nbsp; P ≤ μ·F<sub>i</sub>·n<sub>s</sub></div>
+    <div class="eq">Slipping: &nbsp; P = μ·F<sub>i</sub>·n<sub>s</sub></div>
+    <div class="eq">Bearing joint: &nbsp; the plates have slid until the hole walls touch the bolt, so P goes into the bolt</div>
+  </div>
+  <div class="fig">
+    <svg id="shSvg" viewBox="0 0 680 250" role="img" aria-label="Single-shear joint: plates hold by friction, then slip into bearing"></svg>
+    <div class="controls">
+      <label for="shR" class="cap">P / (μ·F<sub>i</sub>·n<sub>s</sub>)</label>
+      <input id="shR" type="range" min="0" max="200" value="60">
+      <span id="shState" class="chip ok">Slip-resistant</span>
+    </div>
+    <p class="cap" id="shNote" aria-live="polite"></p>
+  </div>
+  <div class="col">
+    <p>The slider is a ratio, so the picture holds for any μ. My notes don't give a μ value for my plates, so I don't compute a friction capacity here. In my sheet the shear is checked directly on the bolt, conservatively: τ<sub>sh</sub> = F<sub>s,app</sub>/A<sub>m</sub> ≈ 35 psi.</p>
+    <p>Design rule from my notes: keep threads out of the shear plane. If the shear plane cuts the threads, the area left is the minor area A<sub>m</sub>, which is smaller than the shank.</p>
+  </div>
+</section>
+
+<!-- 6 STRESS -->
+<section id="stress">
+  <div class="col">
+    <div class="num">06</div>
+    <h2>Preload and stress in the bolt</h2>
+    <h3>Choosing the preload</h3>
+    <p>Target the preload that puts a tensile stress of 70% of yield in the bolt. My notes give three reasons for not going higher. In service the bolt sees torsion on top of the axial load. A torque wrench has about ±25% error. And thread lubrication and friction change how much of the torque becomes preload.</p>
+  </div>
+  <div class="eqs">
+    <div class="eq">F<sub>PL</sub> = 0.70·S<sub>y</sub>·A<sub>t</sub>, &nbsp; A<sub>t</sub> = (π/4)(d − 0.9743/TPI)²</div>
+    <div class="eq">T = K<sub>T</sub>·d·F<sub>PL</sub><span class="lbl">K<sub>T</sub>: nonplated 0.30, zinc-plated 0.20, lubricated 0.18, anti-seize 0.12</span></div>
+  </div>
+  <div class="col">
+    <p>Why a nut factor: preload is an axial force, but the torque you apply is tangential at the bolt head. K<sub>T</sub> lumps thread geometry and the friction in the threads and under the collar into one number. I use 0.18 (lubricated), the same as the PDR, where all bolts are lubricated with Krytox.</p>
+    <h3>Combining the stresses</h3>
+  </div>
+  <div class="eqs">
+    <div class="eq">σ<sub>PL</sub> = F<sub>PL</sub>/A<sub>t</sub>, &nbsp; σ<sub>t</sub> = C·F<sub>t,app</sub>/A<sub>t</sub>, &nbsp; τ<sub>sh</sub> = F<sub>s,app</sub>/A<sub>m</sub>, &nbsp; σ<sub>bnd</sub> = 32M<sub>b</sub>/πd³</div>
+    <div class="eq">σ<sub>VM</sub> = √( [σ<sub>PL</sub> + n(σ<sub>t</sub> + σ<sub>bnd</sub>)]² + 3(n·τ<sub>sh</sub>)² )<span class="lbl">n = load factor that makes σ<sub>VM</sub> = S<sub>y</sub></span></div>
+  </div>
+  <div class="fig">
+    <div class="tablewrap"><table id="stressTbl"></table></div>
+    <div class="compare" id="stressBars"></div>
+    <p class="cap">Preload alone uses 70% of yield, and the service load adds less than 1%. The factor n says the applied loads (tension and shear together) would have to grow about 32× before the bolt yields. σ<sub>bnd</sub> = 0 because there is no gap between the plates (M<sub>b</sub> = F<sub>b,s</sub>·a/2 with a = 0).</p>
+  </div>
+  <div class="col">
+    <h3>The ±25% torque error</h3>
+    <p>If the wrench under-delivers, the preload can be as low as 0.75·F<sub>PL</sub>, and the separation margin drops with it. The PDR notes the trade-off: lower torque raises the bolt-yield and thread-shear FOS but lowers the separation FOS, and higher torque does the opposite.</p>
+  </div>
+  <div class="fig"><div class="tablewrap"><table id="worstTbl"></table></div></div>
+</section>
+
+<!-- 7 THREADS -->
+<section id="threads">
+  <div class="col">
+    <div class="num">07</div>
+    <h2>Thread shear: the bolt should break before the threads strip</h2>
+    <p>Design goal: the bolt fails in tension before its threads shear. The threads in a tapped hole share the load over the engagement length L<sub>E</sub>, which is h<sub>nut</sub> for a nut or min(t<sub>p</sub>, d) for a tapped joint. My sheet uses L<sub>E</sub> = 0.75 in.</p>
+  </div>
+  <div class="eqs">
+    <div class="eq">External (bolt): &nbsp; A<sub>ts,ext</sub> = (5/8)π·d<sub>p</sub>·L<sub>E</sub>, &nbsp; τ = F<sub>b,t</sub>/A<sub>ts,ext</sub>, &nbsp; FS = S<sub>sy,bolt</sub>/τ</div>
+    <div class="eq">Internal (tapped hole): &nbsp; A<sub>ts,int</sub> = (3/4)π·d<sub>p</sub>·L<sub>E</sub>, &nbsp; τ = F<sub>b,t</sub>/A<sub>ts,int</sub>, &nbsp; FS = S<sub>sy,grip</sub>/τ</div>
+    <div class="eq">F<sub>b,t</sub> = F<sub>PL</sub> + C·F<sub>t,app</sub><span class="lbl">total tension in the bolt</span></div>
+  </div>
+  <div class="fig">
+    <div class="tablewrap"><table id="thdTbl"></table></div>
+    <h3 style="margin-top:6px">Check: which fails first?</h3>
+    <div class="compare" id="failBars"></div>
+    <p class="cap">My own check, using the sheet's areas and strengths: the force that yields the bolt (S<sub>y</sub>·A<sub>t</sub>) compared with the force that strips each thread (S<sub>sy</sub>·A<sub>ts</sub>). The bolt yields first, so the goal is met. The tapped threads in the 4130 chamber are the weaker of the two thread sides (FS 2.84), because the annealed 4130 is much weaker in shear than the A574 bolt.</p>
+  </div>
+</section>
+
+<!-- FULL CALC -->
+<section id="calc">
+  <div class="col">
+    <div class="num">∑</div>
+    <h2>Full calculation, step by step</h2>
+    <p>Every number on this page is computed live from the inputs in rough_calc_2.xlsx (sheet “bolt joint”). These match the sheet's own results.</p>
+  </div>
+  <div class="fig"><div class="tablewrap"><table id="calcTbl"></table></div></div>
+
+  <div class="callout">
+    <h3>Things I noticed in the sheet</h3>
+    <ul>
+      <li>σ<sub>bnd</sub> (cell C72) divides by <em>h_head</em> cubed (C24) instead of <em>d</em> cubed (C20). Both are 0.25 in right now, so the result is unchanged, but it would go wrong if either value changes. Its M<sub>b</sub> cell (G61) is blank, which gives 0 and matches “no gap”.</li>
+      <li>Several cells show #VALUE! (H4, H13, L13, H31, H42, K44, F58, E73). No formula in the calculation refers to them, so they don't affect any result.</li>
+      <li>S<sub>bolt,ty</sub> is taken as proof strength / 0.85 and S<sub>bolt,sy</sub> as 0.67 × proof (ASTM A574). These are inputs I should confirm against the source.</li>
+    </ul>
+  </div>
+  <div class="callout">
+    <h3>Still open in my notes</h3>
+    <ul>
+      <li>Cyclic load and fatigue. Joint with an O-ring seal: even with F<sub>c</sub> &gt; 0, the joint fails if F<sub>c</sub> drops below a critical value, so I need F<sub>c</sub> = F<sub>i</sub> − (1−C)P<sub>max</sub> ≥ F<sub>c,min</sub>. Fatigue range: without preload the bolt sees the full range b; with preload it sees only C·(b₂ − b₁).</li>
+      <li>The O-ring force (F<sub>oring</sub>) on the joint: not yet included.</li>
+      <li>Clamped part stress (section 7 in my notes): not yet done.</li>
+    </ul>
+  </div>
+</section>
+
+<div class="sources">
+  <p><strong>Sources.</strong> My handwritten notes, Bolt_Joint.pdf (pp. 1–3, 5–6). rough_calc_2.xlsx, sheet “bolt joint” (Subscale TCA, chamber + converging nozzle). Vespula Coaxial Swirl Injector PDR, slides 24–27 (Bolted Joint Analysis). Reference cited in my sheet: <a href="https://mechanicalc.com/reference/bolted-joint-analysis">MechaniCalc, Bolted Joint Analysis</a>.</p>
+</div>
+</div>
+<footer class="site-foot"><div class="in"><span>© <span id="year">2026</span> Amy Hwang</span><a href="../index.html">← All write-ups</a></div></footer>
+
+<script>
+(function(){
+"use strict";
+const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+const NS = "http://www.w3.org/2000/svg";
+const C = {bolt:"var(--ink)",nut:"var(--mid)",plate:"var(--mid)",hl:"var(--accent-text)",red:"var(--accent-text)",ink:"var(--ink)",muted:"var(--muted)",line:"var(--line)",panel:"var(--bg)"};
+const f = (x,dg=1)=> (isFinite(x)? x.toLocaleString("en-US",{minimumFractionDigits:dg,maximumFractionDigits:dg}) : "—");
+const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
+const ease=t=>t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;
+function el(tag,attrs,parent){const e=document.createElementNS(NS,tag);for(const k in attrs){const v=String(attrs[k]);if((k==="fill"||k==="stroke")&&v.indexOf("var(")===0)e.style[k]=v;else e.setAttribute(k,v);}if(parent)parent.appendChild(e);return e;}
+function txt(parent,x,y,s,attrs={}){const t=el("text",Object.assign({x,y,fill:C.ink,"font-size":13},attrs),parent);t.textContent=s;return t;}
+function spring(x,y1,y2,coils,w){let d=`M${x},${y1}`;const n=coils*2,lead=6,h=(y2-y1-2*lead)/n;d+=` L${x},${y1+lead}`;for(let i=0;i<n;i++){d+=` L${x+(i%2?-w:w)},${y1+lead+h*(i+.5)}`;}d+=` L${x},${y2-lead} L${x},${y2}`;return d;}
+function arrow(parent,x1,y1,x2,y2,color,w=2.5){
+  const g=el("g",{},parent);el("line",{x1,y1,x2,y2,stroke:color,"stroke-width":w},g);
+  const a=Math.atan2(y2-y1,x2-x1),s=8;
+  el("path",{d:`M${x2},${y2} L${x2-s*Math.cos(a-.45)},${y2-s*Math.sin(a-.45)} L${x2-s*Math.cos(a+.45)},${y2-s*Math.sin(a+.45)} Z`,fill:color},g);return g;}
+
+/* ---------- Inputs from rough_calc_2.xlsx (sheet "bolt joint") ---------- */
+const I = {W:13.598, Lcom:2.27, dseal:117.77/25.4, R:67/25.4,
+  L:1.75, Lthd:1.25, Lg:1.125, LE:0.75, Lhd:1, Lthdg:0.625, d:0.25, TPI:28, dm:0.2036, dp:0.2268,
+  A:0.0491, At:0.0364, Am:0.0326, Eb:29.7e6, proof:140000, Eg:29.7e6, Sgty:52300, pc:260, KT:0.18, nb:12};
+const R = {};
+R.Sty = I.proof/0.85; R.Ssy = 0.67*I.proof; R.Sgsy = I.Sgty*0.577;
+R.Lshank = I.L - I.Lthd;
+R.AP = Math.PI/4*I.dseal**2; R.FP = R.AP*I.pc; R.M = I.W*I.Lcom;
+R.Ftapp = R.FP/12 + 2*R.M/(12*I.R); R.Fsapp = I.W/12;
+R.FPL = 0.7*R.Sty*I.At; R.T = I.KT*R.FPL*I.d;
+R.kshank = I.A*I.Eb/R.Lshank; R.kthd = I.At*I.Eb/I.Lthdg; R.kb = R.kshank*R.kthd/(R.kshank+R.kthd);
+const ta = Math.tan(Math.PI/6);
+R.kgrip = Math.PI*I.Eg*I.d*ta/(2*Math.log(5*(I.Lg*ta+0.5*I.d)/(I.Lg*ta+2.5*I.d)));
+R.C = R.kb/(R.kb+R.kgrip); R.Fsep = R.FPL/(1-R.C); R.FSsep = R.Fsep/R.Ftapp;
+R.FPLmin = 0.75*R.FPL; R.FSworst = R.FPLmin/R.Ftapp; R.FsepWorst = R.FPLmin/(1-R.C); R.FSsepWorst=R.FsepWorst/R.Ftapp;
+R.n = (R.Sty*I.At - R.FPL)/(R.C*R.Ftapp);
+R.sPL = R.FPL/I.At; R.st = R.C*R.Ftapp/I.At; R.tsh = R.Fsapp/I.Am; R.sbnd = 0;
+R.sVM = Math.sqrt((R.sPL+R.n*(R.st+R.sbnd))**2 + 3*(R.n*R.tsh)**2);
+R.Atsext = 5/8*Math.PI*I.dp*I.LE; R.Atsint = 3/4*Math.PI*I.dp*I.LE;
+R.Fbt = R.FPL + R.C*R.Ftapp; R.tsext = R.Fbt/R.Atsext; R.tsint = R.Fbt/R.Atsint;
+R.FSext = R.Ssy/R.tsext; R.FSint = R.Sgsy/R.tsint;
+R.Fyield = R.Sty*I.At; R.Fstripext = R.Ssy*R.Atsext; R.Fstripint = R.Sgsy*R.Atsint;
+R.AtCheck = Math.PI/4*(I.d-0.9743/I.TPI)**2;
+
+/* ---------- 1. Preload animation ---------- */
+(function(){
+  const svg=document.getElementById("plSvg"), scrub=document.getElementById("plScrub"), stepEl=document.getElementById("plStep");
+  const ratio = R.kb/R.kgrip; // δp/δb
+  function draw(p){
+    svg.innerHTML="";
+    const a=ease(clamp(p/0.45,0,1)), b=ease(clamp((p-0.45)/0.55,0,1));
+    const cx=200, comp=10*ratio/0.18*b; // plate squeeze in px (exaggerated)
+    const topY=110, mid=150-comp/2, bot=190-comp;
+    // plates
+    el("rect",{x:60,y:topY,width:280,height:mid-topY,rx:2,fill:C.plate,"fill-opacity":.22+.25*b,stroke:C.plate},svg);
+    el("rect",{x:60,y:mid,width:280,height:bot-mid,rx:2,fill:C.plate,"fill-opacity":.22+.25*b,stroke:C.plate},svg);
+    el("rect",{x:cx-14,y:topY,width:28,height:bot-topY,fill:"var(--bg)"},svg);
+    // bolt shank + threads
+    const tail=252;
+    el("rect",{x:cx-10,y:92,width:20,height:tail-92,fill:C.bolt,"fill-opacity":.85},svg);
+    for(let y=168;y<tail-2;y+=7) el("line",{x1:cx-10,y1:y,x2:cx+10,y2:y+5,stroke:"var(--bg)","stroke-width":1.4},svg);
+    el("rect",{x:cx-30,y:84,width:60,height:26,rx:3,fill:C.bolt},svg);
+    // nut
+    const nutTop = 214 - (214-bot)*a;
+    el("rect",{x:cx-26,y:nutTop,width:52,height:24,rx:3,fill:C.nut},svg);
+    const rot=(p*6)%1;
+    for(let k=0;k<3;k++){const xx=cx-26+((rot+k/3)%1)*52; el("line",{x1:xx,y1:nutTop+3,x2:xx,y2:nutTop+21,stroke:"var(--bg)","stroke-opacity":.5,"stroke-width":2},svg);}
+    if(a>0 && a<1 || (p<0.45 && p>0)) arrow(svg,cx+44,nutTop+26,cx+44,nutTop+6,C.nut,2);
+    // forces
+    if(b>0.02){
+      const L=18+22*b;
+      arrow(svg,cx-48,topY-L-2,cx-48,topY-2,C.red); arrow(svg,cx+48,topY-L-2,cx+48,topY-2,C.red);
+      arrow(svg,cx-48,bot+L+28,cx-48,bot+30,C.red); arrow(svg,cx+48,bot+L+28,cx+48,bot+30,C.red);
+      txt(svg,cx+60,topY-14,"head pulls plate down",{class:"hand","font-size":19,fill:C.red});
+      txt(svg,cx+60,bot+52,"nut pushes plate up",{class:"hand","font-size":19,fill:C.red});
+      // tension arrows inside bolt
+      arrow(svg,cx,140,cx,100,C.ink,1.6); arrow(svg,cx,200,cx,244,C.ink,1.6);
+    }
+    txt(svg,64,topY+24,"upper plate",{fill:C.ink,"font-size":12});
+    txt(svg,64,bot-10,"lower plate",{fill:C.ink,"font-size":12});
+    txt(svg,cx-30,74,"bolt head (fixed)",{fill:C.bolt,"font-size":12});
+    // force counter
+    txt(svg,60,290,`Fᵢ = ${f(R.FPL*b,0)} lbf`,{"font-size":16,"font-family":"IBM Plex Mono, monospace",fill:C.hl});
+    // spring model
+    el("line",{x1:420,y1:40,x2:640,y2:40,stroke:C.muted,"stroke-width":2},svg);
+    for(let x=424;x<640;x+=10) el("line",{x1:x,y1:40,x2:x-6,y2:32,stroke:C.muted},svg);
+    const db=46*b, dpx=46*ratio*b;
+    el("path",{d:spring(480,40,160+db,7,14),stroke:C.bolt,"stroke-width":2.4,fill:"none"},svg);
+    el("rect",{x:462,y:160+db,width:36,height:8,fill:C.bolt},svg);
+    if(b>0.02) arrow(svg,480,172+db,480,200+db,C.red);
+    el("line",{x1:560,y1:262,x2:640,y2:262,stroke:C.muted,"stroke-width":2},svg);
+    for(let x=564;x<640;x+=10) el("line",{x1:x,y1:262,x2:x-6,y2:270,stroke:C.muted},svg);
+    el("path",{d:spring(600,140+dpx,262,7,14),stroke:C.plate,"stroke-width":2.4,fill:"none"},svg);
+    el("rect",{x:582,y:132+dpx,width:36,height:8,fill:C.plate},svg);
+    if(b>0.02) arrow(svg,600,104+dpx,600,130+dpx,C.red);
+    txt(svg,430,272,"bolt: stretched",{fill:C.bolt,"font-size":12});
+    txt(svg,430,288,"δb = Fᵢ / kb",{fill:C.bolt,"font-size":12});
+    txt(svg,536,94,"plates: compressed",{fill:C.ink,"font-size":12});
+    txt(svg,536,110,"δp = Fᵢ / kgrip",{fill:C.ink,"font-size":12});
+    txt(svg,430,24,"spring model",{class:"hand","font-size":20,fill:C.hl});
+    stepEl.textContent = p<0.02? "Start: everything loose, no force anywhere."
+      : p<0.45? "1. Turn the nut. It pulls the bolt down while the head is held by the upper plate."
+      : p<0.98? "2. The bolt stretches and wants its length back, so the head pulls the upper plate down and the nut pushes the lower plate up."
+      : "3. The plates are squeezed together. Clamping force = preload Fᵢ = 0.70·Sy·At ≈ "+f(R.FPL,0)+" lbf in my bolt.";
+  }
+  let raf=null;
+  function play(){ if(raf)cancelAnimationFrame(raf); if(reduce){scrub.value=1000;draw(1);return;}
+    const t0=performance.now(),D=4200; const tick=now=>{const p=clamp((now-t0)/D,0,1);scrub.value=Math.round(p*1000);draw(p);if(p<1)raf=requestAnimationFrame(tick);};raf=requestAnimationFrame(tick);}
+  document.getElementById("plPlay").addEventListener("click",play);
+  scrub.addEventListener("input",()=>{if(raf)cancelAnimationFrame(raf);draw(scrub.value/1000);});
+  draw(1);
+})();
+
+/* ---------- 2. Tension joint ---------- */
+(function(){
+  const presets={
+    tca:{name:"My TCA joint",Fi:R.FPL,C:R.C,Pd:R.Ftapp,dl:"design load F_t,app"},
+    pdr:{name:"PDR hard start",Fi:2544,C:0.09325327,Pd:2166.66667,dl:"hard-start load per bolt"}
+  };
+  let cur=presets.tca;
+  const chart=document.getElementById("tjChart"), joint=document.getElementById("tjJoint"), sl=document.getElementById("tjP");
+  const state=document.getElementById("tjState"), note=document.getElementById("tjNote");
+  const W=560,H=330,ml=62,mr=16,mt=16,mb=44;
+  function Pmax(){return 1.6*cur.Fi/(1-cur.C);}
+  function render(){
+    const Psep=cur.Fi/(1-cur.C), Pm=Pmax(), P=sl.value/1000*Pm;
+    const sep=P>=Psep, Fb=sep?P:cur.Fi+cur.C*P, Fc=sep?0:cur.Fi-(1-cur.C)*P;
+    const ymax=Pm*1.05;
+    const X=p=>ml+(W-ml-mr)*p/Pm, Y=v=>H-mb-(H-mt-mb)*v/ymax;
+    chart.innerHTML="";
+    // grid + ticks
+    const step=niceStep(ymax/5);
+    for(let v=0;v<=ymax;v+=step){el("line",{x1:ml,y1:Y(v),x2:W-mr,y2:Y(v),stroke:C.line,"stroke-width":1},chart);txt(chart,ml-8,Y(v)+4,f(v,0),{"text-anchor":"end",fill:C.muted,"font-size":11});}
+    const xs=niceStep(Pm/5);
+    for(let v=0;v<=Pm;v+=xs){txt(chart,X(v),H-mb+16,f(v,0),{"text-anchor":"middle",fill:C.muted,"font-size":11});}
+    txt(chart,(ml+W-mr)/2,H-6,"applied load P per bolt (lbf)",{"text-anchor":"middle",fill:C.muted,"font-size":12});
+    txt(chart,14,mt+150,"force (lbf)",{fill:C.muted,"font-size":12,transform:`rotate(-90 14 ${mt+150})`,"text-anchor":"middle"});
+    el("line",{x1:ml,y1:mt,x2:ml,y2:H-mb,stroke:C.muted},chart);
+    el("line",{x1:ml,y1:H-mb,x2:W-mr,y2:H-mb,stroke:C.muted},chart);
+    // separation line
+    el("line",{x1:X(Psep),y1:mt,x2:X(Psep),y2:H-mb,stroke:C.red,"stroke-dasharray":"5 5"},chart);
+    txt(chart,X(Psep)+5,mt+12,"separation",{fill:C.red,"font-size":12});
+    // design load
+    el("line",{x1:X(cur.Pd),y1:mt+20,x2:X(cur.Pd),y2:H-mb,stroke:C.hl,"stroke-dasharray":"2 4"},chart);
+    txt(chart,X(cur.Pd)+5,mt+32,cur.dl,{fill:C.hl,"font-size":12});
+    // P = F reference
+    el("line",{x1:X(0),y1:Y(0),x2:X(Pm),y2:Y(Pm),stroke:C.muted,"stroke-dasharray":"2 3","stroke-opacity":.6},chart);
+    // curves
+    el("polyline",{points:`${X(0)},${Y(cur.Fi)} ${X(Psep)},${Y(Psep)} ${X(Pm)},${Y(Pm)}`,fill:"none",stroke:C.bolt,"stroke-width":3},chart);
+    el("polyline",{points:`${X(0)},${Y(cur.Fi)} ${X(Psep)},${Y(0)} ${X(Pm)},${Y(0)}`,fill:"none",stroke:C.plate,"stroke-width":3},chart);
+    txt(chart,X(Pm)-6,Y(Pm)+18,"Fb (bolt)",{fill:C.bolt,"text-anchor":"end","font-size":13,"font-weight":700});
+    txt(chart,X(Psep*0.42),Y(cur.Fi-(1-cur.C)*Psep*0.42)+20,"Fc (clamp)",{fill:C.ink,"font-size":13,"font-weight":700});
+    txt(chart,ml+6,Y(cur.Fi)-8,"Fᵢ",{fill:C.ink,"font-size":13});
+    // markers
+    el("line",{x1:X(P),y1:mt,x2:X(P),y2:H-mb,stroke:C.ink,"stroke-opacity":.35},chart);
+    el("circle",{cx:X(P),cy:Y(Fb),r:6,fill:C.bolt,stroke:"var(--bg)","stroke-width":2},chart);
+    el("circle",{cx:X(P),cy:Y(Fc),r:6,fill:C.plate,stroke:"var(--bg)","stroke-width":2},chart);
+    // joint picture
+    joint.innerHTML="";
+    const gap = sep? Math.min(14, 4+10*(P-Psep)/(Pm-Psep)) : 0;
+    const squeeze = 1 - Fc/cur.Fi; // 0..1
+    const ytop=50, yhalf=100;
+    el("rect",{x:30,y:ytop,width:240,height:46,rx:2,fill:C.plate,"fill-opacity":.2+.3*(Fc/cur.Fi),stroke:C.plate},joint);
+    el("rect",{x:30,y:yhalf+gap,width:240,height:46,rx:2,fill:C.plate,"fill-opacity":.2+.3*(Fc/cur.Fi),stroke:C.plate},joint);
+    el("rect",{x:138,y:ytop,width:24,height:96+gap,fill:"var(--bg)"},joint);
+    el("rect",{x:142,y:38,width:16,height:128+gap,fill:C.bolt,"fill-opacity":.85},joint);
+    el("rect",{x:126,y:30,width:48,height:20,rx:3,fill:C.bolt},joint);
+    el("rect",{x:128,y:146+gap,width:44,height:18,rx:3,fill:C.nut},joint);
+    const L=10+40*Math.min(1,P/Pm);
+    if(P>0){arrow(joint,70,ytop-4,70,ytop-4-L,C.hl);arrow(joint,230,ytop-4,230,ytop-4-L,C.hl);
+      arrow(joint,70,146+gap+4,70,146+gap+4+L*0.6,C.hl);arrow(joint,230,146+gap+4,230,146+gap+4+L*0.6,C.hl);
+      txt(joint,82,ytop-12,"P",{fill:C.hl,"font-size":14,"font-weight":700});}
+    if(sep) txt(joint,186,yhalf+gap/2+4,"gap!",{class:"hand",fill:C.red,"font-size":20});
+    void squeeze;
+    // readouts
+    document.getElementById("roP").textContent=f(P,0)+" lbf";
+    document.getElementById("roFb").textContent=f(Fb,0)+" lbf";
+    document.getElementById("roFc").textContent=f(Fc,0)+" lbf";
+    document.getElementById("roSep").textContent=f(Psep,0)+" lbf";
+    if(sep){state.className="chip bad";state.textContent="Separated: bolt carries all of P";}
+    else if(P>0.8*Psep){state.className="chip warn";state.textContent="Clamped, close to separation";}
+    else {state.className="chip ok";state.textContent="Clamped";}
+    note.textContent = `${cur.name}: Fᵢ = ${f(cur.Fi,0)} lbf, C = ${f(cur.C,3)}. Of each extra pound of P, the bolt picks up ${f(cur.C*100,1)}% and the clamp loses ${f((1-cur.C)*100,1)}%. FS against separation at the ${cur.dl} = ${f(Psep/cur.Pd,2)}.`;
+  }
+  function niceStep(raw){const p=Math.pow(10,Math.floor(Math.log10(raw)));const m=raw/p;return (m<1.5?1:m<3?2:m<7?5:10)*p;}
+  function setP(P){sl.value=Math.round(1000*P/Pmax());render();}
+  let raf=null;
+  function animateTo(P){ if(raf)cancelAnimationFrame(raf); const from=+sl.value, to=Math.round(1000*P/Pmax());
+    if(reduce){sl.value=to;render();return;} const t0=performance.now();
+    const tick=now=>{const t=clamp((now-t0)/900,0,1);sl.value=Math.round(from+(to-from)*ease(t));render();if(t<1)raf=requestAnimationFrame(tick);};raf=requestAnimationFrame(tick);}
+  sl.addEventListener("input",()=>{if(raf)cancelAnimationFrame(raf);render();});
+  document.getElementById("tjDesign").addEventListener("click",()=>animateTo(cur.Pd));
+  document.querySelectorAll(".preset").forEach(b=>b.addEventListener("click",()=>{
+    cur=presets[b.dataset.preset];document.querySelectorAll(".preset").forEach(x=>x.setAttribute("aria-pressed",x===b?"true":"false"));setP(cur.Pd);}));
+  setP(cur.Pd);
+})();
+
+/* ---------- 3. Stiffness: tapped joint drawing + table ---------- */
+(function(){
+  const s=document.getElementById("tapSvg");
+  const x0=40,y0=70,sc=180; // px per inch
+  const hd=I.Lhd*sc, thd=I.Lthd*sc, sh=R.Lshank*sc;
+  el("rect",{x:x0+20,y:y0-20,width:hd,height:110,fill:C.bolt,"fill-opacity":.08,stroke:C.bolt},s);
+  txt(s,x0+26,y0-4,"converging nozzle",{fill:C.bolt,"font-size":12});
+  el("rect",{x:x0+20+hd,y:y0-20,width:190,height:110,fill:C.plate,"fill-opacity":.08,stroke:C.plate},s);
+  txt(s,x0+26+hd,y0-4,"chamber (tapped)",{fill:C.ink,"font-size":12});
+  // bolt horizontal
+  el("rect",{x:x0,y:y0+10,width:20,height:I.d*sc*0.0+44,fill:C.bolt},s);
+  el("rect",{x:x0+20,y:y0+22,width:sh,height:20,fill:C.bolt,"fill-opacity":.85},s);
+  el("rect",{x:x0+20+sh,y:y0+22,width:thd,height:20,fill:C.bolt,"fill-opacity":.55},s);
+  for(let x=x0+24+sh;x<x0+20+sh+thd-4;x+=7) el("line",{x1:x,y1:y0+42,x2:x+5,y2:y0+22,stroke:"var(--bg)","stroke-width":1.3},s);
+  // dims
+  function dim(xa,xb,y,label,col){el("line",{x1:xa,y1:y,x2:xb,y2:y,stroke:col},s);el("line",{x1:xa,y1:y-5,x2:xa,y2:y+5,stroke:col},s);el("line",{x1:xb,y1:y-5,x2:xb,y2:y+5,stroke:col},s);txt(s,(xa+xb)/2,y-6,label,{"text-anchor":"middle",fill:col,"font-size":12});}
+  dim(x0+20,x0+20+sh,y0-34,`L_shank ${R.Lshank}"`,C.ink);
+  dim(x0+20+sh,x0+20+sh+thd,y0-34,`L_thd ${I.Lthd}"`,C.ink);
+  dim(x0+20,x0+20+I.Lg*sc,y0+110,`L_g ${I.Lg}"`,C.hl);
+  dim(x0+20+sh,x0+20+I.Lg*sc,y0+76,`L_thd,g ${I.Lthdg}"`,C.muted);
+  dim(x0+20,x0+20+hd,y0+140,`L_hd ${I.Lhd}"`,C.bolt);
+  dim(x0+20+hd,x0+20+hd+I.LE*sc,y0+140,`L_E ${I.LE}"`,C.plate);
+  const t=document.getElementById("stiffTbl");
+  t.innerHTML=`<tr><th>Quantity</th><th>Formula</th><th style="text-align:right">Value</th></tr>
+  <tr><td>k<sub>shank</sub></td><td class="f">A·E<sub>b</sub>/L<sub>shank</sub></td><td class="v">${f(R.kshank/1e6,3)}×10⁶ lbf/in</td></tr>
+  <tr><td>k<sub>thread</sub></td><td class="f">A<sub>t</sub>·E<sub>b</sub>/L<sub>thd,g</sub></td><td class="v">${f(R.kthd/1e6,3)}×10⁶ lbf/in</td></tr>
+  <tr><td>k<sub>b</sub> (bolt)</td><td class="f">series of the two</td><td class="v b">${f(R.kb/1e6,3)}×10⁶ lbf/in</td></tr>
+  <tr><td>k<sub>grip</sub> (plates)</td><td class="f">frustum, α = 30°</td><td class="v g">${f(R.kgrip/1e6,3)}×10⁶ lbf/in</td></tr>
+  <tr><td>C</td><td class="f">k<sub>b</sub>/(k<sub>b</sub>+k<sub>grip</sub>)</td><td class="v">${f(R.C,4)}</td></tr>`;
+})();
+
+/* ---------- 4. Bolt circle ---------- */
+(function(){
+  const s=document.getElementById("circSvg"), read=document.getElementById("circRead");
+  const cx=165,cy=160,rr=110, base=R.FP/12, sumy2=6*I.R*I.R;
+  const loads=[]; for(let i=0;i<12;i++){const th=i*Math.PI/6, y=I.R*Math.cos(th); loads.push({i,th,y,F:base+R.M*y/sumy2});}
+  const mn=Math.min(...loads.map(l=>l.F)), mx=Math.max(...loads.map(l=>l.F));
+  el("circle",{cx,cy,r:rr+22,fill:"none",stroke:C.line,"stroke-width":16},s);
+  el("circle",{cx,cy,r:rr,fill:"none",stroke:C.muted,"stroke-dasharray":"3 4"},s);
+  el("line",{x1:cx-rr-34,y1:cy,x2:cx+rr+34,y2:cy,stroke:C.muted,"stroke-dasharray":"6 4"},s);
+  txt(s,cx+rr+24,cy-6,"y = 0",{fill:C.muted,"font-size":11});
+  arrow(s,cx,cy-20,cx,cy+40,C.red); txt(s,cx+8,cy+34,"W",{fill:C.red,"font-size":14,"font-weight":700});
+  txt(s,cx-62,cy-30,"M = W·L_com",{class:"hand",fill:C.red,"font-size":19});
+  loads.forEach(l=>{
+    const x=cx+rr*Math.sin(l.th), y=cy-rr*Math.cos(l.th), t=(l.F-mn)/(mx-mn||1);
+    
+    const g=el("g",{tabindex:0,role:"button","aria-label":`Bolt ${l.i+1}: ${f(l.F,2)} lbf`},s);
+    el("circle",{cx:x,cy:y,r:12,fill:C.hl,"fill-opacity":(0.15+0.85*t).toFixed(2),stroke:C.ink,"stroke-width":1.5},g);
+    txt(g,x,y+4,String(l.i+1),{"text-anchor":"middle",fill:C.ink,"font-size":11,"font-weight":700});
+    const show=()=>{read.textContent=`Bolt ${l.i+1}: y = ${f(l.y,3)} in → F = ${f(base,2)} + ${f(R.M*l.y/sumy2,2)} = ${f(l.F,2)} lbf`;};
+    g.addEventListener("mouseenter",show);g.addEventListener("focus",show);
+  });
+  txt(s,10,318,`top bolt ${f(mx,2)} lbf · bottom bolt ${f(mn,2)} lbf`,{fill:C.muted,"font-size":12});
+  read.textContent=`Bolt 1 (top): F = ${f(base,2)} + ${f(R.M/(6*I.R),2)} = ${f(mx,2)} lbf. This is the F_t,app my sheet designs to.`;
+  const t=document.getElementById("loadTbl");
+  t.innerHTML=`<tr><th>Quantity</th><th style="text-align:right">Value</th></tr>
+  <tr><td>d<sub>seal</sub> (117.77 mm)</td><td class="v">${f(I.dseal,3)} in</td></tr>
+  <tr><td>A<sub>P</sub> = πd<sub>seal</sub>²/4</td><td class="v">${f(R.AP,2)} in²</td></tr>
+  <tr><td>F<sub>P</sub> = A<sub>P</sub>·260 psi</td><td class="v">${f(R.FP,1)} lbf</td></tr>
+  <tr><td>M = W·L<sub>com</sub> (13.598 lb × 2.27 in)</td><td class="v">${f(R.M,2)} lb·in</td></tr>
+  <tr><td>R (67 mm bolt circle radius)</td><td class="v">${f(I.R,3)} in</td></tr>
+  <tr><td><strong>F<sub>t,app</sub></strong> = F<sub>P</sub>/12 + M/(6R)</td><td class="v hl"><strong>${f(R.Ftapp,2)} lbf</strong></td></tr>
+  <tr><td><strong>F<sub>s,app</sub></strong> = W/12</td><td class="v"><strong>${f(R.Fsapp,3)} lbf</strong></td></tr>`;
+})();
+
+/* ---------- 5. Shear joint ---------- */
+(function(){
+  const s=document.getElementById("shSvg"), sl=document.getElementById("shR"), chip=document.getElementById("shState"), note=document.getElementById("shNote");
+  let off=0, raf=null;
+  const clr=7; // hole clearance each side, px
+  function target(r){return r<=1?0:clr*2*clamp((r-1)/0.12,0,1);}
+  function draw(r){
+    s.innerHTML="";
+    const cx=340, half=off/2, iy=128;
+    // top plate (pulled left) and bottom plate (pulled right)
+    const tg=el("g",{transform:`translate(${-half},0)`},s);
+    el("rect",{x:110,y:iy-40,width:300,height:40,fill:C.plate,"fill-opacity":.3,stroke:C.plate},tg);
+    el("rect",{x:cx-11-clr,y:iy-40,width:22+2*clr,height:40,fill:"var(--bg)"},tg);
+    const bg=el("g",{transform:`translate(${half},0)`},s);
+    el("rect",{x:270,y:iy,width:300,height:40,fill:C.plate,"fill-opacity":.3,stroke:C.plate},bg);
+    el("rect",{x:cx-11-clr,y:iy,width:22+2*clr,height:40,fill:"var(--bg)"},bg);
+    // bolt
+    el("rect",{x:cx-11,y:iy-58,width:22,height:132,fill:C.bolt,"fill-opacity":.85},s);
+    el("rect",{x:cx-26,y:iy-66,width:52,height:20,rx:3,fill:C.bolt},s);
+    for(let y=iy+42;y<iy+70;y+=7) el("line",{x1:cx-11,y1:y,x2:cx+11,y2:y+5,stroke:"var(--bg)","stroke-width":1.3},s);
+    el("rect",{x:cx-24,y:iy+40,width:48,height:20,rx:3,fill:C.nut},s);
+    // shear plane
+    const bearing = off>=2*clr-0.01;
+    el("line",{x1:90,y1:iy,x2:600,y2:iy,stroke:bearing?C.red:C.muted,"stroke-dasharray":"6 5","stroke-width":bearing?2:1},s);
+    txt(s,600,iy-6,"shear plane",{fill:bearing?C.red:C.muted,"font-size":12,"text-anchor":"end"});
+    if(bearing){el("rect",{x:cx-11,y:iy-4,width:22,height:8,fill:C.red},s);}
+    // loads
+    const L=20+70*Math.min(r,2)/2;
+    if(r>0){arrow(s,110-half,iy-20,110-half-L,iy-20,C.hl,3);txt(s,110-half-L,iy-28,"P",{fill:C.hl,"font-size":15,"font-weight":700});
+      arrow(s,570+half,iy+20,570+half+L,iy+20,C.hl,3);txt(s,570+half+L-10,iy+12,"P",{fill:C.hl,"font-size":15,"font-weight":700});}
+    // friction
+    const fr=Math.min(r,1);
+    if(fr>0.02){const fl=12+40*fr; arrow(s,230,iy-6,230+fl,iy-6,C.nut,2); arrow(s,470,iy+6,470-fl,iy+6,C.nut,2);
+      txt(s,230,iy-12,"friction μFᵢnₛ",{fill:C.nut,"font-size":12});}
+    // clamp arrows
+    arrow(s,cx-60,iy-80,cx-60,iy-44,C.red,2); arrow(s,cx-60,iy+86,cx-60,iy+44,C.red,2);
+    txt(s,cx-120,iy-84,"clamp Fᵢ",{class:"hand",fill:C.red,"font-size":19});
+    txt(s,20,236,`P / (μFᵢnₛ) = ${f(r,2)}`,{fill:C.ink,"font-size":14,"font-family":"IBM Plex Mono, monospace"});
+    if(r<=0.999){chip.className="chip ok";chip.textContent="Slip-resistant";note.textContent="Friction from the preload holds the plates. The bolt shank carries no shear: P ≤ μ·Fᵢ·nₛ.";}
+    else if(!bearing){chip.className="chip warn";chip.textContent="Slipping";note.textContent="P has reached μ·Fᵢ·nₛ. The plates slide through the hole clearance.";}
+    else {chip.className="chip bad";chip.textContent="Bearing";note.textContent="The hole walls now push on the bolt, so the extra load goes into the bolt in shear at the shear plane. This is why the threads should stay out of that plane.";}
+  }
+  function go(){ if(raf)cancelAnimationFrame(raf); const r=sl.value/100, tgt=target(r);
+    if(reduce){off=tgt;draw(r);return;}
+    const tick=()=>{off+= (tgt-off)*0.18; if(Math.abs(tgt-off)<0.05) off=tgt; draw(r); if(off!==tgt) raf=requestAnimationFrame(tick);}; tick();}
+  sl.addEventListener("input",go); draw(sl.value/100);
+})();
+
+/* ---------- 6. Stresses ---------- */
+(function(){
+  const t=document.getElementById("stressTbl");
+  t.innerHTML=`<tr><th>Quantity</th><th>Formula</th><th style="text-align:right">Value</th></tr>
+  <tr><td>Preload F<sub>PL</sub></td><td class="f">0.70·S<sub>y</sub>·A<sub>t</sub></td><td class="v">${f(R.FPL,1)} lbf</td></tr>
+  <tr><td>Tightening torque T</td><td class="f">K<sub>T</sub>·d·F<sub>PL</sub>, K<sub>T</sub> = 0.18</td><td class="v">${f(R.T,1)} lbf·in</td></tr>
+  <tr><td>σ<sub>PL</sub></td><td class="f">F<sub>PL</sub>/A<sub>t</sub></td><td class="v">${f(R.sPL,0)} psi</td></tr>
+  <tr><td>σ<sub>t</sub></td><td class="f">C·F<sub>t,app</sub>/A<sub>t</sub></td><td class="v">${f(R.st,0)} psi</td></tr>
+  <tr><td>τ<sub>sh</sub></td><td class="f">F<sub>s,app</sub>/A<sub>m</sub></td><td class="v">${f(R.tsh,1)} psi</td></tr>
+  <tr><td>σ<sub>bnd</sub></td><td class="f">32M<sub>b</sub>/πd³, no gap</td><td class="v">0 psi</td></tr>
+  <tr><td>n (load factor)</td><td class="f">(S<sub>y</sub>A<sub>t</sub> − F<sub>PL</sub>)/(C·F<sub>t,app</sub>)</td><td class="v">${f(R.n,2)}</td></tr>
+  <tr><td>σ<sub>VM</sub> at that n</td><td class="f">von Mises, above</td><td class="v">${f(R.sVM,0)} psi</td></tr>`;
+  const bars=document.getElementById("stressBars"), Sy=R.Sty;
+  [["σ_PL (preload)",R.sPL,C.bolt],["σ_t (service tension)",R.st,C.hl],["S_y (bolt yield)",Sy,C.muted]].forEach(([k,v,col])=>{
+    bars.insertAdjacentHTML("beforeend",`<div class="bar"><div>${k}</div><div class="track"><div class="fill" style="width:${100*v/Sy}%;background:${col}"></div></div><div class="val">${f(v/1000,1)} ksi</div></div>`);});
+  document.getElementById("worstTbl").innerHTML=`<tr><th></th><th style="text-align:right">Nominal torque</th><th style="text-align:right">−25% torque</th></tr>
+  <tr><td>Preload</td><td class="v">${f(R.FPL,0)} lbf</td><td class="v">${f(R.FPLmin,0)} lbf</td></tr>
+  <tr><td>F<sub>PL</sub>/F<sub>t,app</sub> (sheet's worst-case formula)</td><td class="v">${f(R.FPL/R.Ftapp,2)}</td><td class="v">${f(R.FSworst,2)}</td></tr>
+  <tr><td>FS<sub>sep</sub> = F<sub>sep</sub>/F<sub>t,app</sub></td><td class="v">${f(R.FSsep,2)}</td><td class="v">${f(R.FSsepWorst,2)}</td></tr>`;
+})();
+
+/* ---------- 7. Threads ---------- */
+(function(){
+  document.getElementById("thdTbl").innerHTML=`<tr><th>Quantity</th><th style="text-align:right">External (bolt)</th><th style="text-align:right">Internal (chamber)</th></tr>
+  <tr><td>Shear area A<sub>ts</sub></td><td class="v">${f(R.Atsext,4)} in²</td><td class="v">${f(R.Atsint,4)} in²</td></tr>
+  <tr><td>Total bolt tension F<sub>b,t</sub></td><td class="v" colspan="2" style="text-align:center">${f(R.Fbt,1)} lbf</td></tr>
+  <tr><td>Thread shear stress τ</td><td class="v">${f(R.tsext,0)} psi</td><td class="v">${f(R.tsint,0)} psi</td></tr>
+  <tr><td>Shear yield S<sub>sy</sub></td><td class="v">${f(R.Ssy,0)} psi (A574)</td><td class="v">${f(R.Sgsy,0)} psi (4130)</td></tr>
+  <tr><td><strong>FS against stripping</strong></td><td class="v"><strong>${f(R.FSext,2)}</strong></td><td class="v"><strong>${f(R.FSint,2)}</strong></td></tr>`;
+  const mx=R.Fstripext, b=document.getElementById("failBars");
+  [["Bolt yields in tension",R.Fyield,C.bolt],["Chamber threads strip",R.Fstripint,C.plate],["Bolt threads strip",R.Fstripext,C.muted]].forEach(([k,v,col])=>{
+    b.insertAdjacentHTML("beforeend",`<div class="bar"><div>${k}</div><div class="track"><div class="fill" style="width:${100*v/mx}%;background:${col}"></div></div><div class="val">${f(v,0)} lbf</div></div>`);});
+})();
+
+/* ---------- Full calc table ---------- */
+(function(){
+  const rows=[
+    ["grp","0) Bolt geometry, ¼-28"],
+    ["A<sub>t</sub> (sheet input)","(π/4)(d − 0.9743/TPI)²",`${f(I.At,4)} in² (formula: ${f(R.AtCheck,4)})`],
+    ["d<sub>p</sub>, d<sub>m</sub>","d − 0.6495/TPI, d − 1.2990/TPI",`${I.dp}, ${I.dm} in`],
+    ["S<sub>y,bolt</sub>","proof / 0.85",`${f(R.Sty,0)} psi`],
+    ["grp","1) Applied load"],
+    ["F<sub>P</sub>","A<sub>P</sub>·p<sub>c</sub>",`${f(R.FP,1)} lbf`],
+    ["F<sub>t,app</sub>","F<sub>P</sub>/12 + M/(6R)",`${f(R.Ftapp,2)} lbf`],
+    ["F<sub>s,app</sub>","W/12",`${f(R.Fsapp,3)} lbf`],
+    ["grp","2) Preload"],
+    ["F<sub>PL</sub>","0.70·S<sub>y</sub>·A<sub>t</sub>",`${f(R.FPL,1)} lbf`],
+    ["T","K<sub>T</sub>·F<sub>PL</sub>·d",`${f(R.T,1)} lbf·in`],
+    ["grp","3) Joint stiffness"],
+    ["k<sub>b</sub>","1/(1/k<sub>shank</sub> + 1/k<sub>thd</sub>)",`${f(R.kb,0)} lbf/in`],
+    ["k<sub>grip</sub>","frustum, α = 30°",`${f(R.kgrip,0)} lbf/in`],
+    ["C","k<sub>b</sub>/(k<sub>b</sub>+k<sub>grip</sub>)",`${f(R.C,4)}`],
+    ["grp","4) Separation"],
+    ["F<sub>sep</sub>","F<sub>PL</sub>/(1−C)",`${f(R.Fsep,1)} lbf`],
+    ["FS<sub>sep</sub>","F<sub>sep</sub>/F<sub>t,app</sub>",`${f(R.FSsep,2)}`],
+    ["FS (worst case)","0.75·F<sub>PL</sub>/F<sub>t,app</sub>",`${f(R.FSworst,2)}`],
+    ["grp","5) Bolt stress"],
+    ["n","(S<sub>y</sub>A<sub>t</sub> − F<sub>PL</sub>)/(C·F<sub>t,app</sub>)",`${f(R.n,2)}`],
+    ["σ<sub>VM</sub>","at load factor n",`${f(R.sVM,0)} psi`],
+    ["grp","6) Thread shear"],
+    ["FS<sub>ext</sub>","S<sub>sy,bolt</sub>/τ<sub>ts,ext</sub>",`${f(R.FSext,2)}`],
+    ["FS<sub>int</sub>","S<sub>sy,grip</sub>/τ<sub>ts,int</sub>",`${f(R.FSint,2)}`]
+  ];
+  let h=`<tr><th>Step</th><th>Formula</th><th style="text-align:right">Result</th></tr>`;
+  rows.forEach(r=>{h+= r[0]==="grp"? `<tr class="grp"><td colspan="3">${r[1]}</td></tr>` : `<tr><td>${r[0]}</td><td class="f">${r[1]}</td><td class="v">${r[2]}</td></tr>`;});
+  document.getElementById("calcTbl").innerHTML=h;
+})();
+
+window.__R = R;
+})();
+</script>
+</body>
+</html>
